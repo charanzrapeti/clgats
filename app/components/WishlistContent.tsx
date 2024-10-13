@@ -284,23 +284,30 @@ function CourseDetails({ course: initialCourse, isEditing, onClose, onUpdate }: 
           />
         </div>
         <div>
-          <Label htmlFor="applicationStartDate">Application Start Date</Label>
-          <Input
+        <Label htmlFor="applicationStartDate">Application Start Date</Label>
+        <Input
             id="applicationStartDate"
             name="applicationStartDate"
             type="date"
-            value={course.applicationStartDate.toISOString().split('T')[0]}
-            onChange={(e) => {console.log(e.target.value); handleSelectChange('applicationStartDate', new Date(e.target.value).toISOString())}}
+            // Ensure course.applicationStartDate is a Date object
+            value={course.applicationStartDate instanceof Date 
+            ? course.applicationStartDate.toISOString().split('T')[0] 
+            : new Date(course.applicationStartDate).toISOString().split('T')[0]} 
+            onChange={(e) => {
+            console.log(e.target.value);
+            handleSelectChange('applicationStartDate', new Date(e.target.value).toISOString());
+            }}
             disabled={!isEditing}
-          />
+        />
         </div>
+
         <div>
           <Label htmlFor="applicationEndDate">Application End Date</Label>
           <Input
             id="applicationEndDate"
             name="applicationEndDate"
             type="date"
-            value={course.applicationEndDate.toISOString().split('T')[0]}
+            value={course.applicationEndDate instanceof Date ? course.applicationEndDate.toISOString().split('T')[0]: new Date(course.applicationEndDate).toISOString().split('T')[0]}
             onChange={(e) => handleSelectChange('applicationEndDate', new Date(e.target.value).toISOString())}
             disabled={!isEditing}
           />
@@ -369,7 +376,8 @@ function CourseDetails({ course: initialCourse, isEditing, onClose, onUpdate }: 
             id="courseStartDate"
             name="courseStartDate"
             type="date"
-            value={course.courseStartDate.toISOString().split('T')[0]}
+            // Ensure course.applicationStartDate is a Date object
+            value={course.applicationStartDate instanceof Date ? course.courseStartDate.toISOString().split('T')[0]: new Date(course.courseStartDate).toISOString().split('T')[0]}
             onChange={(e) => handleSelectChange('courseStartDate', new Date(e.target.value).toISOString())}
             disabled={!isEditing}
           />
