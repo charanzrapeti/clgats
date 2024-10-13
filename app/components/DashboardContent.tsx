@@ -4,6 +4,14 @@ import { useState } from 'react'
 
 import { MoreHorizontal, X } from 'lucide-react'
 
+import { Button } from "@/components/ui/button"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+  } from "@/components/ui/dropdown-menu"
+
 
 const applications = [
     { id: 1, university: 'Harvard University', course: 'Computer Science', status: 'Approved', country: 'USA', state: 'Massachusetts', city: 'Cambridge', description: 'Advanced CS program', startDate: '2023-09-01' },
@@ -104,10 +112,7 @@ export default function DashboardContent() {
       rejected: applications.filter(app => app.status === 'Rejected').length,
     }
   
-    const handleMoreDetails = (appId) => {
-      setShowActions(showActions === appId ? null : appId)
-    }
-  
+ 
     const handleAction = (action, app) => {
       setSelectedApp(app)
       if (action === 'View') {
@@ -188,27 +193,29 @@ export default function DashboardContent() {
                       </span>
                     </td>
                     <td className="px-4 py-2 whitespace-nowrap">
-                      <div className="relative">
-                        <button 
-                          onClick={() => handleMoreDetails(app.id)}
-                          className="text-blue-600 hover:text-blue-900"
-                        >
-                          <MoreHorizontal className="h-5 w-5" />
-                        </button>
-                        {showActions === app.id && (
-                          <div className="absolute right-0 mt-2 w-48 bg-white rounded-md overflow-hidden shadow-xl z-10">
-                            {['View', 'Edit', 'Delete'].map((action) => (
-                              <button
-                                key={action}
-                                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
-                                onClick={() => handleAction(action, app)}
-                              >
-                                {action}
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                      </div>
+                    
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                            
+                                <Button variant="ghost" className="h-8 w-8 p-0 text-blue-600 hover:text-blue-900">
+                                <span className="sr-only">Open menu</span>
+                                <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem onSelect={() => handleAction('View',app)}>
+                                View
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => handleAction('Edit', app)}>
+                                Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => handleAction('Delete',app)}>
+                                Delete
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                </DropdownMenu>
+                        
+
                     </td>
                   </tr>
                 ))}
