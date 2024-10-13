@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { MoreHorizontal } from 'lucide-react'
+import { MoreHorizontal, Plus, Star, ChevronRight, ChevronLeft } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import {
@@ -14,165 +14,631 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Switch } from "@/components/ui/switch"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
-// Mock data with expanded course details
-const initialCourses = [
-  { 
-    id: 1, 
-    university: 'Harvard University', 
-    course: 'Computer Science', 
-    status: 'Open',
-    applied: Math.random() < 0.5 ? 0 : 1,
-    description: 'A comprehensive course covering various aspects of computer science including algorithms, data structures, and software engineering.'
-  },
-  { 
-    id: 2, 
-    university: 'MIT', 
-    course: 'Electrical Engineering', 
-    status: 'Closed',
-    applied: Math.random() < 0.5 ? 0 : 1,
-    description: 'An in-depth study of electrical engineering principles, circuit design, and signal processing.'
-  },
-  { 
-    id: 3, 
-    university: 'Stanford University', 
-    course: 'Data Science', 
-    status: 'Open',
-    applied: Math.random() < 0.5 ? 0 : 1,
-    description: 'Explore the world of data analysis, machine learning, and statistical modeling in this comprehensive data science course.'
-  },
-  { 
-    id: 4, 
-    university: 'Caltech', 
-    course: 'Physics', 
-    status: 'Open',
-    applied: Math.random() < 0.5 ? 0 : 1,
-    description: 'Delve into the fundamental laws of the universe, from quantum mechanics to astrophysics.'
-  },
-  { 
-    id: 5, 
-    university: 'UC Berkeley', 
-    course: 'Business Administration', 
-    status: 'Closed',
-    applied: Math.random() < 0.5 ? 0 : 1,
-    description: 'Gain a strong foundation in business principles, management strategies, and entrepreneurship.'
-  }
-]
+// Helper types for select fields
+type AdmissionStatus = 'approved' | 'pending' | 'rejected';
+type ApplicationStatus = 'applied' | 'notapplied';
+type Currency = 'dollars' | 'euros' | 'rupees';
+type ModeOfStudy = 'online' | 'parttime' | 'fulltime';
 
+// Requirements object structure
+interface Requirements {
+  resume: string;
+  sop: string;
+  transcripts: string;
+  languageTest: {
+    testName: string;
+    testScore: string;
+  };
+  lor: string;
+  otherDocuments: string[];
+  minimumCgpa: number;
+}
+
+// Financials object structure
+interface Financials {
+  applicationFee: number;
+  fees: number;
+  currency: Currency;
+  scholarshipStatus: string;
+  scholarshipAmount: number;
+}
+
+// Main interface for course details
 interface CourseDetails {
-  id: number
-  university: string
-  course: string
-  status: string
-  applied: number
-  description: string
+  id: string;
+  university: string;
+  universityCountry: string;
+  universityState: string;
+  universityCity: string;
+  course: string;
+  admissionStatus: AdmissionStatus;
+  applicationStatus: ApplicationStatus;
+  applicationDescription: string;
+  applicationStartDate: Date;
+  applicationEndDate: Date;
+  interest: number;
+  programDuration: number;
+  modeOfStudy: ModeOfStudy;
+  courseStartDate: Date;
+  requirements: Requirements;
+  financials: Financials;
+  description: string;
+  resources: string;
+  additionalNotes: string;
 }
 
 interface CourseDetailsProps {
-  course: CourseDetails
-  isEditing: boolean
-  onClose: () => void
-  onUpdate: (course: CourseDetails) => void
+  course: CourseDetails;
+  isEditing: boolean;
+  onClose: () => void;
+  onUpdate: (course: CourseDetails) => void;
 }
 
+// Mock data for document selection
+const mockDocuments = ['Document1.pdf', 'Document2.pdf', 'Document3.pdf', 'Document4.pdf'];
+
+// Mock initial course data
+const initialCourses: CourseDetails[] = [
+  {
+    id: '1',
+    university: 'Harvard University',
+    universityCountry: 'USA',
+    universityState: 'Massachusetts',
+    universityCity: 'Cambridge',
+    course: 'Computer Science',
+    admissionStatus: 'pending',
+    applicationStatus: 'applied',
+    applicationDescription: 'Application in progress',
+    applicationStartDate: new Date('2023-01-01'),
+    applicationEndDate: new Date('2023-12-31'),
+    interest: 5,
+    programDuration: 4,
+    modeOfStudy: 'fulltime',
+    courseStartDate: new Date('2024-09-01'),
+    requirements: {
+      resume: 'Resume1.pdf',
+      sop: 'SOP1.pdf',
+      transcripts: 'Transcript1.pdf',
+      languageTest: {
+        testName: 'TOEFL',
+        testScore: '100',
+      },
+      lor: 'LOR1.pdf',
+      otherDocuments: ['OtherDoc1.pdf'],
+      minimumCgpa: 3.5,
+    },
+    financials: {
+      applicationFee: 100,
+      fees: 50000,
+      currency: 'dollars',
+      scholarshipStatus: 'Pending',
+      scholarshipAmount: 0,
+    },
+    description: 'A comprehensive computer science program',
+    resources: 'https://cs.harvard.edu',
+    additionalNotes: 'Highly competitive program',
+  },
+  // Add more mock courses as needed
+];
+
+const currencySymbols: Record<Currency, string> = {
+  dollars: '$',
+  euros: '€',
+  rupees: '₹'
+};
+
 function CourseDetails({ course: initialCourse, isEditing, onClose, onUpdate }: CourseDetailsProps) {
-  const [course, setCourse] = useState<CourseDetails>(initialCourse)
+  const [course, setCourse] = useState<CourseDetails>(initialCourse);
+  const [currentSection, setCurrentSection] = useState(0);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setCourse({ ...course, [e.target.name]: e.target.value })
+    setCourse({ ...course, [e.target.name]: e.target.value });
+  };
+
+  const handleSelectChange = (name: string, value: string) => {
+    setCourse({ ...course, [name]: value });
+  };
+
+  const handleInterestChange = (value: string) => {
+    setCourse({ ...course, ['interest']:parseInt(value)})
   }
 
-  const handleSwitchChange = (checked: boolean) => {
-    setCourse({ ...course, applied: checked ? 1 : 0 })
-  }
+  const handleRequirementsChange = (field: keyof Requirements, value: string | number | string[]) => {
+    setCourse({
+      ...course,
+      requirements: { ...course.requirements, [field]: value },
+    });
+  };
+
+  const handleLanguageTestChange = (field: 'testName' | 'testScore', value: string) => {
+    setCourse({
+      ...course,
+      requirements: {
+        ...course.requirements,
+        languageTest: { ...course.requirements.languageTest, [field]: value },
+      },
+    });
+  };
+
+  const handleFinancialsChange = (field: keyof Financials, value: number | string | Currency) => {
+    setCourse({
+      ...course,
+      financials: { ...course.financials, [field]: value },
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    onUpdate(course)
-  }
+    e.preventDefault();
+    onUpdate(course);
+  };
+
+  const handleAddOtherDocument = () => {
+    const newDocument = prompt('Enter the name of the new document:');
+    if (newDocument) {
+      setCourse({
+        ...course,
+        requirements: {
+          ...course.requirements,
+          otherDocuments: [...course.requirements.otherDocuments, newDocument],
+        },
+      });
+    }
+  };
+
+  const sections = [
+    { title: "General Details", content: (
+      <div className="space-y-4">
+        <div>
+          <Label htmlFor="university">University Name</Label>
+          <Input
+            id="university"
+            name="university"
+            value={course.university}
+            onChange={handleInputChange}
+            disabled={!isEditing}
+          />
+        </div>
+        <div>
+          <Label htmlFor="universityCountry">University Country</Label>
+          <Input
+            id="universityCountry"
+            name="universityCountry"
+            value={course.universityCountry}
+            onChange={handleInputChange}
+            disabled={!isEditing}
+          />
+        </div>
+        <div>
+          <Label htmlFor="universityState">University State</Label>
+          <Input
+            id="universityState"
+            name="universityState"
+            value={course.universityState}
+            onChange={handleInputChange}
+            disabled={!isEditing}
+          />
+        </div>
+        <div>
+          <Label htmlFor="universityCity">University City</Label>
+          <Input
+            id="universityCity"
+            name="universityCity"
+            value={course.universityCity}
+            onChange={handleInputChange}
+            disabled={!isEditing}
+          />
+        </div>
+        <div>
+          <Label htmlFor="course">Course Name</Label>
+          <Input
+            id="course"
+            name="course"
+            value={course.course}
+            onChange={handleInputChange}
+            disabled={!isEditing}
+          />
+        </div>
+        <div>
+          <Label htmlFor="admissionStatus">Admission Status</Label>
+          <Select
+            onValueChange={(value) => handleSelectChange('admissionStatus', value)}
+            defaultValue={course.admissionStatus}
+            disabled={!isEditing}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select admission status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="approved">Approved</SelectItem>
+              <SelectItem value="pending">Pending</SelectItem>
+              <SelectItem value="rejected">Rejected</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label htmlFor="applicationStatus">Application Status</Label>
+          <Select
+            onValueChange={(value) => handleSelectChange('applicationStatus', value)}
+            defaultValue={course.applicationStatus}
+            disabled={!isEditing}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select application status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="applied">Applied</SelectItem>
+              <SelectItem value="notapplied">Not Applied</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label htmlFor="applicationDescription">Application Description</Label>
+          <Textarea
+            id="applicationDescription"
+            name="applicationDescription"
+            value={course.applicationDescription}
+            onChange={handleInputChange}
+            disabled={!isEditing}
+          />
+        </div>
+        <div>
+          <Label htmlFor="applicationStartDate">Application Start Date</Label>
+          <Input
+            id="applicationStartDate"
+            name="applicationStartDate"
+            type="date"
+            value={course.applicationStartDate.toISOString().split('T')[0]}
+            onChange={(e) => {console.log(e.target.value); handleSelectChange('applicationStartDate', new Date(e.target.value).toISOString())}}
+            disabled={!isEditing}
+          />
+        </div>
+        <div>
+          <Label htmlFor="applicationEndDate">Application End Date</Label>
+          <Input
+            id="applicationEndDate"
+            name="applicationEndDate"
+            type="date"
+            value={course.applicationEndDate.toISOString().split('T')[0]}
+            onChange={(e) => handleSelectChange('applicationEndDate', new Date(e.target.value).toISOString())}
+            disabled={!isEditing}
+          />
+        </div>
+        <div>
+  <Label htmlFor="interest">Interest Level</Label>
+  {isEditing ? (
+    <Select
+      onValueChange={handleInterestChange}
+      defaultValue={course.interest.toString()}
+    >
+      <SelectTrigger className="w-full">
+        <SelectValue placeholder="Select interest level" />
+      </SelectTrigger>
+      <SelectContent>
+        {[1, 2, 3, 4, 5].map((level) => (
+          <SelectItem key={level} value={level.toString()}>
+            {level}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  ) : (
+    <div className="flex">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <Star
+          key={star}
+          className={`w-6 h-6 ${star <= course.interest ? 'text-yellow-400' : 'text-gray-300'}`}
+          fill={star <= course.interest ? 'currentColor' : 'none'}
+        />
+      ))}
+    </div>
+  )}
+</div>
+        <div>
+          <Label htmlFor="programDuration">Program Duration (years)</Label>
+          <Input
+            id="programDuration"
+            name="programDuration"
+            type="number"
+            value={course.programDuration}
+            onChange={handleInputChange}
+            disabled={!isEditing}
+          />
+        </div>
+        <div>
+          <Label htmlFor="modeOfStudy">Mode of Study</Label>
+          <Select
+            onValueChange={(value) => handleSelectChange('modeOfStudy', value)}
+            defaultValue={course.modeOfStudy}
+            disabled={!isEditing}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select mode of study" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="online">Online</SelectItem>
+              <SelectItem value="parttime">Part-time</SelectItem>
+              <SelectItem value="fulltime">Full-time</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label htmlFor="courseStartDate">Course Start Date</Label>
+          <Input
+            id="courseStartDate"
+            name="courseStartDate"
+            type="date"
+            value={course.courseStartDate.toISOString().split('T')[0]}
+            onChange={(e) => handleSelectChange('courseStartDate', new Date(e.target.value).toISOString())}
+            disabled={!isEditing}
+          />
+        </div>
+      </div>
+    )},
+    { title: "Required Documents", content: (
+      <div className="space-y-4">
+        {['resume', 'sop', 'transcripts', 'lor'].map((docType) => (
+          <div key={docType}>
+            <Label htmlFor={docType}>{docType.toUpperCase()}</Label>
+            <div className="flex items-center space-x-2">
+              <Select
+                onValueChange={(value) => handleRequirementsChange(docType as keyof Requirements, value)}
+                defaultValue={course.requirements[docType as keyof Requirements] as string}
+                disabled={!isEditing}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder={isEditing ? "Select file" : "No file selected"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {mockDocuments.map((doc) => (
+                    <SelectItem key={doc} value={doc}>{doc}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {isEditing && (
+                <Button type="button" variant="outline" size="icon">
+                  <Plus className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+            {!isEditing && course.requirements[docType as keyof Requirements] && (
+              <a href="#" className="text-blue-600 hover:underline">View File</a>
+            )}
+          </div>
+        ))}
+        <div>
+          <Label htmlFor="languageTest">Language Test</Label>
+          <div className="flex space-x-2">
+            <Select
+              onValueChange={(value) => handleLanguageTestChange('testName', value)}
+              defaultValue={course.requirements.languageTest.testName}
+              disabled={!isEditing}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select test" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="TOEFL">TOEFL</SelectItem>
+                <SelectItem value="IELTS">IELTS</SelectItem>
+                <SelectItem value="PTE">PTE</SelectItem>
+              </SelectContent>
+            </Select>
+            <Input
+              placeholder="Score"
+              value={course.requirements.languageTest.testScore}
+              onChange={(e) => handleLanguageTestChange('testScore', e.target.value)}
+              disabled={!isEditing}
+            />
+          </div>
+        </div>
+        <div>
+          <Label>Other Documents</Label>
+          <div className="space-y-2">
+            {course.requirements.otherDocuments.map((doc, index) => (
+              <div key={index} className="flex items-center space-x-2">
+                <Input value={doc} disabled />
+                {isEditing && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => {
+                      
+                      const newDocs = [...course.requirements.otherDocuments];
+                      newDocs.splice(index, 1);
+                      handleRequirementsChange('otherDocuments', newDocs);
+                    }}
+                  >
+                    X
+                  </Button>
+                )}
+              </div>
+            ))}
+            {isEditing && (
+              <Button type="button" onClick={handleAddOtherDocument} variant="outline" size="icon">
+                <Plus className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        </div>
+        <div>
+          <Label htmlFor="minimumCgpa">Minimum CGPA</Label>
+          <Input
+            id="minimumCgpa"
+            name="minimumCgpa"
+            type="number"
+            step="0.1"
+            value={course.requirements.minimumCgpa}
+            onChange={(e) => handleRequirementsChange('minimumCgpa', parseFloat(e.target.value))}
+            disabled={!isEditing}
+          />
+        </div>
+      </div>
+    )},
+    { title: "Financials", content: (
+      <div className="space-y-4">
+        <div>
+          <Label htmlFor="currency">Currency</Label>
+          <Select
+            onValueChange={(value) => handleFinancialsChange('currency', value as Currency)}
+            defaultValue={course.financials.currency}
+            disabled={!isEditing}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select currency" />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(currencySymbols).map(([currency, symbol]) => (
+                <SelectItem key={currency} value={currency}>{symbol}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label htmlFor="applicationFee">Application Fee ({currencySymbols[course.financials.currency]})</Label>
+          <Input
+            id="applicationFee"
+            name="applicationFee"
+            type="number"
+            value={course.financials.applicationFee}
+            onChange={(e) => handleFinancialsChange('applicationFee', parseFloat(e.target.value))}
+            disabled={!isEditing}
+          />
+        </div>
+        <div>
+          <Label htmlFor="fees">Fees ({currencySymbols[course.financials.currency]})</Label>
+          <Input
+            id="fees"
+            name="fees"
+            type="number"
+            value={course.financials.fees}
+            onChange={(e) => handleFinancialsChange('fees', parseFloat(e.target.value))}
+            disabled={!isEditing}
+          />
+        </div>
+        <div>
+          <Label htmlFor="scholarshipStatus">Scholarship Status</Label>
+          <Input
+            id="scholarshipStatus"
+            name="scholarshipStatus"
+            value={course.financials.scholarshipStatus}
+            onChange={(e) => handleFinancialsChange('scholarshipStatus', e.target.value)}
+            disabled={!isEditing}
+          />
+        </div>
+        <div>
+          <Label htmlFor="scholarshipAmount">Scholarship Amount ({currencySymbols[course.financials.currency]})</Label>
+          <Input
+            id="scholarshipAmount"
+            name="scholarshipAmount"
+            type="number"
+            value={course.financials.scholarshipAmount}
+            onChange={(e) => handleFinancialsChange('scholarshipAmount', parseFloat(e.target.value))}
+            disabled={!isEditing}
+          />
+        </div>
+      </div>
+    )},
+    { title: "Other Details", content: (
+      <div className="space-y-4">
+        <div>
+          <Label htmlFor="description">Description</Label>
+          <Textarea
+            id="description"
+            name="description"
+            value={course.description}
+            onChange={handleInputChange}
+            disabled={!isEditing}
+          />
+        </div>
+        <div>
+          <Label htmlFor="resources">Resources</Label>
+          <Input
+            id="resources"
+            name="resources"
+            value={course.resources}
+            onChange={handleInputChange}
+            disabled={!isEditing}
+          />
+        </div>
+        <div>
+          <Label htmlFor="additionalNotes">Additional Notes</Label>
+          <Textarea
+            id="additionalNotes"
+            name="additionalNotes"
+            value={course.additionalNotes}
+            onChange={handleInputChange}
+            disabled={!isEditing}
+          />
+        </div>
+      </div>
+    )}
+  ];
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 overflow-y-auto h-full">
-      <div>
-        <Label htmlFor="university">University Name</Label>
-        <Input
-          id="university"
-          name="university"
-          value={course.university}
-          onChange={handleInputChange}
-          disabled={!isEditing}
-        />
+    <form onSubmit={handleSubmit} className="space-y-6 overflow-y-auto h-full px-6">
+      <div className="mb-4">
+        <h2 className="text-lg font-semibold">{sections[currentSection].title}</h2>
       </div>
-      <div>
-        <Label htmlFor="course">Course Name</Label>
-        <Input
-          id="course"
-          name="course"
-          value={course.course}
-          onChange={handleInputChange}
-          disabled={!isEditing}
-        />
-      </div>
-      <div>
-        <Label htmlFor="status">Status</Label>
-        <Input
-          id="status"
-          name="status"
-          value={course.status}
-          onChange={handleInputChange}
-          disabled={!isEditing}
-        />
-      </div>
-      <div className="flex items-center space-x-2">
-        <Switch
-          id="applied"
-          checked={course.applied === 1}
-          onCheckedChange={handleSwitchChange}
-          disabled={!isEditing}
-        />
-        <Label htmlFor="applied">Applied</Label>
-      </div>
-      <div>
-        <Label htmlFor="description">Description</Label>
-        <Textarea
-          id="description"
-          name="description"
-          value={course.description}
-          onChange={handleInputChange}
-          disabled={!isEditing}
-          className="h-32"
-        />
-      </div>
-      <div className="flex justify-end space-x-2">
-        <Button type="button" variant="outline" onClick={onClose}>
-          Close
+      {sections[currentSection].content}
+      <div className="flex justify-between items-center mt-6">
+        <Button
+          type="button"
+          onClick={() => setCurrentSection(prev => Math.max(0, prev - 1))}
+          disabled={currentSection === 0}
+        >
+          <ChevronLeft className="mr-2 h-4 w-4" /> Previous
         </Button>
-        {isEditing && (
-          <Button type="submit">Update</Button>
+        {currentSection < sections.length - 1 ? (
+          <Button
+            type="button"
+            onClick={() => setCurrentSection(prev => Math.min(sections.length - 1, prev + 1))}
+          >
+            Next <ChevronRight className="ml-2 h-4 w-4" />
+          </Button>
+        ) : (
+          <div className="space-x-2">
+            <Button type="button" variant="outline" onClick={onClose}>
+              Close
+            </Button>
+            {isEditing && (
+              <Button type="submit">Update</Button>
+            )}
+          </div>
         )}
+      </div>
+      <div className="flex justify-center space-x-2 mt-4">
+        {sections.map((_, index) => (
+          <div
+            key={index}
+            className={`w-2 h-2 rounded-full ${
+              index === currentSection ? 'bg-primary' : 'bg-gray-300'
+            }`}
+          />
+        ))}
       </div>
     </form>
   )
 }
 
-export default function WishlistContent() {
+export default function UniversityCoursesList() {
   const [courses, setCourses] = useState(initialCourses)
-  const [selectedCourse, setSelectedCourse] = useState<number | null>(null)
+  const [selectedCourse, setSelectedCourse] = useState<string | null>(null)
   const [isEditing, setIsEditing] = useState(false)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
 
-  const handleDelete = (id: number) => {
+  const handleDelete = (id: string) => {
     setCourses(courses.filter(course => course.id !== id))
   }
 
-  const handleView = (id: number) => {
+  const handleView = (id: string) => {
     setSelectedCourse(id)
     setIsEditing(false)
     setIsDialogOpen(true)
   }
 
-  const handleEdit = (id: number) => {
+  const handleEdit = (id: string) => {
     setSelectedCourse(id)
     setIsEditing(true)
     setIsDialogOpen(true)
@@ -197,22 +663,20 @@ export default function WishlistContent() {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>S.No</TableHead>
             <TableHead>University</TableHead>
             <TableHead>Course</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Applied</TableHead>
+            <TableHead>Admission Status</TableHead>
+            <TableHead>Application Status</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {courses.map((course, index) => (
+          {courses.map((course) => (
             <TableRow key={course.id}>
-              <TableCell>{index + 1}</TableCell>
               <TableCell>{course.university}</TableCell>
               <TableCell>{course.course}</TableCell>
-              <TableCell>{course.status}</TableCell>
-              <TableCell>{course.applied ? 'Yes' : 'No'}</TableCell>
+              <TableCell>{course.admissionStatus}</TableCell>
+              <TableCell>{course.applicationStatus}</TableCell>
               <TableCell>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -240,7 +704,7 @@ export default function WishlistContent() {
       </Table>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="w-4/5 h-4/5 max-w-none">
+        <DialogContent className="w-11/12 max-w-4xl h-5/6 max-h-screen">
           <DialogHeader>
             <DialogTitle>{isEditing ? 'Edit Course Details' : 'View Course Details'}</DialogTitle>
           </DialogHeader>
