@@ -5,6 +5,7 @@ import { LayoutDashboard, Heart, FileText, User, PieChart } from 'lucide-react'
 
 import DashboardContent from './components/DashboardContent'
 import WishlistContent from './components/WishlistContent'
+import ProfileComponent from './components/ProfileContent'
 
 const tabs = [
   { name: 'Dashboard', icon: LayoutDashboard },
@@ -53,6 +54,7 @@ export default function Component() {
         <p className="mt-4 text-gray-600">This is the {activeTab} page content.</p>
         {activeTab === 'Dashboard' && <DashboardContent />}
         {activeTab === 'WishList' && <WishlistContent />}
+        {activeTab === 'Profile' && <ProfileComponent/>}
 
       </div>
     </div>
