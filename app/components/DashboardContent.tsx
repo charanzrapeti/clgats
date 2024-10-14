@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 
-import { MoreHorizontal, X } from 'lucide-react'
+import { MoreHorizontal } from 'lucide-react'
 
 import { Button } from "@/components/ui/button"
 import {
@@ -11,121 +11,67 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
   } from "@/components/ui/dropdown-menu"
+  import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 
+  import {  CourseDetailsInterface } from '../interfaces/courseInterface'
 
-const applications = [
-    { id: 1, university: 'Harvard University', course: 'Computer Science', status: 'Approved', country: 'USA', state: 'Massachusetts', city: 'Cambridge', description: 'Advanced CS program', startDate: '2023-09-01' },
-    { id: 2, university: 'MIT', course: 'Electrical Engineering', status: 'Pending', country: 'USA', state: 'Massachusetts', city: 'Cambridge', description: 'Cutting-edge EE program', startDate: '2023-08-15' },
-    { id: 3, university: 'Stanford University', course: 'Data Science', status: 'Rejected', country: 'USA', state: 'California', city: 'Stanford', description: 'Comprehensive DS curriculum', startDate: '2023-09-15' },
-    { id: 4, university: 'Cambridge University', course: 'Mathematics', status: 'Approved', country: 'UK', state: 'Cambridgeshire', city: 'Cambridge', description: 'Pure and applied mathematics', startDate: '2023-10-01' },
-    { id: 5, university: 'Oxford University', course: 'Physics', status: 'Pending', country: 'UK', state: 'Oxfordshire', city: 'Oxford', description: 'Theoretical and experimental physics', startDate: '2023-09-30' },
-  ]
-
-
-  function ApplicationForm({ application, onClose, isEditing }) {
-    return (
-      <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full" id="my-modal">
-        <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-          <div className="mt-3 text-center">
-            <h3 className="text-lg leading-6 font-medium text-gray-900">{isEditing ? 'Edit' : 'View'} Application</h3>
-            <button onClick={onClose} className="absolute top-0 right-0 mt-4 mr-4">
-              <X className="h-6 w-6 text-gray-500" />
-            </button>
-            <div className="mt-2 px-7 py-3">
-              <form>
-                <h4 className="text-left font-medium mb-2">Course Details</h4>
-                <input
-                  type="text"
-                  placeholder="University Name"
-                  value={application.university}
-                  readOnly={!isEditing}
-                  className="mb-2 w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none"
-                />
-                <input
-                  type="text"
-                  placeholder="Course Name"
-                  value={application.course}
-                  readOnly={!isEditing}
-                  className="mb-2 w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none"
-                />
-                <textarea
-                  placeholder="Description"
-                  value={application.description}
-                  readOnly={!isEditing}
-                  className="mb-2 w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none"
-                />
-                <h5 className="text-left font-medium mb-2">Place</h5>
-                <input
-                  type="text"
-                  placeholder="Country"
-                  value={application.country}
-                  readOnly={!isEditing}
-                  className="mb-2 w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none"
-                />
-                <input
-                  type="text"
-                  placeholder="State"
-                  value={application.state}
-                  readOnly={!isEditing}
-                  className="mb-2 w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none"
-                />
-                <input
-                  type="text"
-                  placeholder="City"
-                  value={application.city}
-                  readOnly={!isEditing}
-                  className="mb-2 w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none"
-                />
-                <h4 className="text-left font-medium mb-2">Application Details</h4>
-                <input
-                  type="date"
-                  placeholder="Start Date"
-                  value={application.startDate}
-                  readOnly={!isEditing}
-                  className="mb-2 w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none"
-                />
-              </form>
-            </div>
-          </div>
-        </div>
-      </div>
-    )
-  }
+  import { initialCourses} from '../MockData'
   
+  import { CourseDetails } from './CourseDetails'
+  
+
+
 
 
 export default function DashboardContent() {
+  const [courses, setCourses] = useState(initialCourses)
     const [filter, setFilter] = useState('All')
-    const [selectedApp, setSelectedApp] = useState(null)
-    const [showActions, setShowActions] = useState(null)
+  
+    const [selectedCourse, setSelectedCourse] = useState<string | null>(null)
+  
     const [showForm, setShowForm] = useState(false)
     const [isEditing, setIsEditing] = useState(false)
   
-    const filteredApplications = applications.filter(app => 
-      filter === 'All' || app.status === filter
+    const filteredApplications = initialCourses.filter(app => 
+      filter === 'All' || app.admissionStatus === filter
     )
   
     const counts = {
-      total: applications.length,
-      approved: applications.filter(app => app.status === 'Approved').length,
-      pending: applications.filter(app => app.status === 'Pending').length,
-      rejected: applications.filter(app => app.status === 'Rejected').length,
+      total: initialCourses.length,
+      approved: initialCourses.filter(app => app.admissionStatus === 'approved').length,
+      pending: initialCourses.filter(app => app.admissionStatus === 'pending').length,
+      rejected: initialCourses.filter(app => app.admissionStatus === 'rejected').length,
     }
   
  
     const handleAction = (action, app) => {
-      setSelectedApp(app)
+    
       if (action === 'View') {
         setIsEditing(false)
+        setSelectedCourse(app.id)
         setShowForm(true)
       } else if (action === 'Edit') {
         setIsEditing(true)
+        setSelectedCourse(app.id)
         setShowForm(true)
       } else if (action === 'Delete') {
         // Implement delete functionality here
         console.log('Delete', app)
       }
-      setShowActions(null)
+      
+    }
+
+    const handleCloseDialog = () => {
+      setShowForm(false)
+      setSelectedCourse(null)
+      setIsEditing(false)
+    }
+
+    const handleUpdateCourse = (updatedCourse: CourseDetailsInterface) => {
+      setCourses(courses.map(course => 
+        course.id === updatedCourse.id ? updatedCourse : course
+      ))
+      handleCloseDialog()
     }
   
     return (
@@ -151,17 +97,17 @@ export default function DashboardContent() {
   
         <div className="space-y-4">
           <div className="flex flex-wrap gap-2">
-            {['All', 'Approved', 'Pending', 'Rejected'].map((status) => (
+            {['All', 'approved', 'pending', 'rejected'].map((admissionStatus) => (
               <button
-                key={status}
-                onClick={() => setFilter(status)}
+                key={admissionStatus}
+                onClick={() => setFilter(admissionStatus)}
                 className={`px-4 py-2 rounded-full text-sm font-medium ${
-                  filter === status
+                  filter === admissionStatus
                     ? 'bg-blue-600 text-white'
                     : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
                 }`}
               >
-                {status}
+                {admissionStatus}
               </button>
             ))}
           </div>
@@ -185,11 +131,11 @@ export default function DashboardContent() {
                     <td className="px-4 py-2 whitespace-nowrap">{app.course}</td>
                     <td className="px-4 py-2 whitespace-nowrap">
                       <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        app.status === 'Approved' ? 'bg-green-100 text-green-800' :
-                        app.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
+                        app.admissionStatus === 'approved' ? 'bg-green-100 text-green-800' :
+                        app.admissionStatus === 'pending' ? 'bg-yellow-100 text-yellow-800' :
                         'bg-red-100 text-red-800'
                       }`}>
-                        {app.status}
+                        {app.admissionStatus}
                       </span>
                     </td>
                     <td className="px-4 py-2 whitespace-nowrap">
@@ -224,13 +170,30 @@ export default function DashboardContent() {
           </div>
         </div>
   
-        {showForm && (
+        {/* {showForm && (
           <ApplicationForm
             application={selectedApp}
             onClose={() => setShowForm(false)}
             isEditing={isEditing}
           />
-        )}
+        )} */}
+
+        <Dialog open={showForm} onOpenChange={setShowForm}>
+          <DialogContent className="w-11/12 max-w-4xl h-5/6 max-h-screen">
+            <DialogHeader>
+              <DialogTitle>{isEditing ? 'Edit Course Details' : 'View Course Details'}</DialogTitle>
+            </DialogHeader>
+            {selectedCourse && (
+              <CourseDetails
+                course={courses.find(c => c.id === selectedCourse)!}
+                isEditing={isEditing}
+                onClose={handleCloseDialog}
+                onUpdate={handleUpdateCourse}
+              />
+            )}
+          </DialogContent>
+      </Dialog>
+        
       </div>
     )
   }
