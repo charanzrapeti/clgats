@@ -16,121 +16,15 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
-// Helper types for select fields
-type AdmissionStatus = 'approved' | 'pending' | 'rejected';
-type ApplicationStatus = 'applied' | 'notapplied';
-type Currency = 'dollars' | 'euros' | 'rupees';
-type ModeOfStudy = 'online' | 'parttime' | 'fulltime';
+import {   Currency, Requirements, Financials, CourseDetailsInterface, CourseDetailsProps } from '../interfaces/courseInterface'
 
-// Requirements object structure
-interface Requirements {
-  resume: string;
-  sop: string;
-  transcripts: string;
-  languageTest: {
-    testName: string;
-    testScore: string;
-  };
-  lor: string;
-  otherDocuments: string[];
-  minimumCgpa: number;
-}
+import {mockDocuments, initialCourses, currencySymbols} from '../MockData'
 
-// Financials object structure
-interface Financials {
-  applicationFee: number;
-  fees: number;
-  currency: Currency;
-  scholarshipStatus: string;
-  scholarshipAmount: number;
-}
 
-// Main interface for course details
-interface CourseDetails {
-  id: string;
-  university: string;
-  universityCountry: string;
-  universityState: string;
-  universityCity: string;
-  course: string;
-  admissionStatus: AdmissionStatus;
-  applicationStatus: ApplicationStatus;
-  applicationDescription: string;
-  applicationStartDate: Date;
-  applicationEndDate: Date;
-  interest: number;
-  programDuration: number;
-  modeOfStudy: ModeOfStudy;
-  courseStartDate: Date;
-  requirements: Requirements;
-  financials: Financials;
-  description: string;
-  resources: string;
-  additionalNotes: string;
-}
 
-interface CourseDetailsProps {
-  course: CourseDetails;
-  isEditing: boolean;
-  onClose: () => void;
-  onUpdate: (course: CourseDetails) => void;
-}
-
-// Mock data for document selection
-const mockDocuments = ['Document1.pdf', 'Document2.pdf', 'Document3.pdf', 'Document4.pdf'];
-
-// Mock initial course data
-const initialCourses: CourseDetails[] = [
-  {
-    id: '1',
-    university: 'Harvard University',
-    universityCountry: 'USA',
-    universityState: 'Massachusetts',
-    universityCity: 'Cambridge',
-    course: 'Computer Science',
-    admissionStatus: 'pending',
-    applicationStatus: 'applied',
-    applicationDescription: 'Application in progress',
-    applicationStartDate: new Date('2023-01-01'),
-    applicationEndDate: new Date('2023-12-31'),
-    interest: 5,
-    programDuration: 4,
-    modeOfStudy: 'fulltime',
-    courseStartDate: new Date('2024-09-01'),
-    requirements: {
-      resume: 'Resume1.pdf',
-      sop: 'SOP1.pdf',
-      transcripts: 'Transcript1.pdf',
-      languageTest: {
-        testName: 'TOEFL',
-        testScore: '100',
-      },
-      lor: 'LOR1.pdf',
-      otherDocuments: ['OtherDoc1.pdf'],
-      minimumCgpa: 3.5,
-    },
-    financials: {
-      applicationFee: 100,
-      fees: 50000,
-      currency: 'dollars',
-      scholarshipStatus: 'Pending',
-      scholarshipAmount: 0,
-    },
-    description: 'A comprehensive computer science program',
-    resources: 'https://cs.harvard.edu',
-    additionalNotes: 'Highly competitive program',
-  },
-  // Add more mock courses as needed
-];
-
-const currencySymbols: Record<Currency, string> = {
-  dollars: '$',
-  euros: '€',
-  rupees: '₹'
-};
 
 function CourseDetails({ course: initialCourse, isEditing, onClose, onUpdate }: CourseDetailsProps) {
-  const [course, setCourse] = useState<CourseDetails>(initialCourse);
+  const [course, setCourse] = useState<CourseDetailsInterface>(initialCourse);
   const [currentSection, setCurrentSection] = useState(0);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -658,7 +552,7 @@ export default function UniversityCoursesList() {
     setIsEditing(false)
   }
 
-  const handleUpdateCourse = (updatedCourse: CourseDetails) => {
+  const handleUpdateCourse = (updatedCourse: CourseDetailsInterface) => {
     setCourses(courses.map(course => 
       course.id === updatedCourse.id ? updatedCourse : course
     ))
